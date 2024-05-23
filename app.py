@@ -1,8 +1,7 @@
 
+from typing import Any
 import pygame
 from pygame.locals import *
-
-
 
 # game variables
 running = True
@@ -15,29 +14,39 @@ screen_width = 400
 screen_height = 500
 car_width = 60
 car_height = 135
-middle_line = 20 # the yellow double-line in the middle is 20 px
-lane_width = (screen_width - middle_line)//4
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("2 CARS")
 
-
 fps = 80
 clock = pygame.time.Clock()
-
 
 #images
 background_lane = pygame.image.load("img/background_lane.png")
 background_lane = pygame.transform.scale(background_lane, (screen_width, screen_height + lane_divider))
 
+blue_car_img = pygame.transform.scale(pygame.image.load("img/blue_car.png"), (car_width, car_height))
+green_car_img = pygame.transform.scale(pygame.image.load("img/green_car.png"), (car_width, car_height))
 
-blue_car = pygame.image.load("img/blue_car.png")
-blue_car = pygame.transform.scale(blue_car, (car_width, car_height))
-green_car = pygame.image.load("img/green_car.png")
-green_car = pygame.transform.scale(green_car, (car_width, car_height))
+
+# car groups
+class Cars(pygame.sprite.Sprite):
+    def __init__(self, image, x, y):
+        pygame.sprite.Sprite.__init__(self)
+
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.center = [x, y]
+
+
+
+car_group = pygame.sprite.Group()
+green_car = Cars(green_car_img, 7/8 * screen_width, screen_height - 0.6 * car_height) # (1 - 1/8) * screen width
+blue_car = Cars(blue_car_img, 1/8 * screen_width, screen_height - 0.6 * car_height)
+car_group.add(green_car)
+car_group.add(blue_car)
 
 
 #main game loop
-
 while running:
     clock.tick(fps)
     
@@ -47,12 +56,11 @@ while running:
     if ground_scroll > lane_divider:
         ground_scroll = 0
 
+    # draw cars and obstacles
+    car_group.draw(screen)
 
-    screen.blit(blue_car, (lane_width + (lane_width - car_width)/2, screen_height - 1.1 * car_height))
-    screen.blit(green_car, (2 * lane_width + middle_line + (lane_width - car_width)/2, screen_height - 1.1 * car_height))
-    
-    
-    
+
+       
     
     pygame.display.update()
     
@@ -64,6 +72,7 @@ while running:
 
 
 pygame.quit()
+
 
 
 
