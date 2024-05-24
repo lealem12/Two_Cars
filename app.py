@@ -48,11 +48,19 @@ class Cars(pygame.sprite.Sprite):
         self.vel = 4
 
     def update(self):
-        if self.clicked == False and self.change_lanes == False and pygame.mouse.get_pressed()[0] == 1:
+        # assign keyboard keys to each car.
+        if self.car_num == 1:
+            self.index = K_1
+        elif self.car_num == 2:
+            self.index = K_2
+        # check interaction with keyboard
+        if self.clicked == False and self.change_lanes == False and pygame.key.get_pressed()[self.index] == True:
             self.clicked = True
             self.change_lanes = True
-        if pygame.mouse.get_pressed()[0] == 0:
+        if pygame.key.get_pressed()[self.index] == False:
             self.clicked = False
+
+        
         if self.counter >= lane_width:
             self.change_lanes = False
             self.counter = 0
@@ -79,8 +87,8 @@ class Cars(pygame.sprite.Sprite):
 
 
 car_group = pygame.sprite.Group()
-green_car = Cars(green_car_img, 1/8 * screen_width, screen_height - 0.6 * car_height, 1) # (1 - 1/8) * screen width
-blue_car = Cars(blue_car_img, 7/8 * screen_width, screen_height - 0.6 * car_height, 2)
+green_car = Cars(green_car_img, 1/8 * screen_width, screen_height - 0.6 * car_height, 1) 
+blue_car = Cars(blue_car_img, 7/8 * screen_width, screen_height - 0.6 * car_height, 2) # (1 - 1/8) * screen width
 car_group.add(green_car)
 car_group.add(blue_car)
 
@@ -98,8 +106,6 @@ while running:
     # draw cars and obstacles
     car_group.draw(screen)
     car_group.update()
-
-       
     
     pygame.display.update()
     
