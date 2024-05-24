@@ -9,16 +9,21 @@ ground_scroll = 0
 scroll_speed = 4
 lane_divider = 42 # length of each short, white lane dividers
 
+
 # screen and functionality
 screen_width = 400
 screen_height = 500
 car_width = 60
 car_height = 135
+lane_width = screen_width//4
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("2 CARS")
 
 fps = 80
 clock = pygame.time.Clock()
+
+
+
 
 #images
 background_lane = pygame.image.load("img/background_lane.png")
@@ -30,18 +35,52 @@ green_car_img = pygame.transform.scale(pygame.image.load("img/green_car.png"), (
 
 # car groups
 class Cars(pygame.sprite.Sprite):
-    def __init__(self, image, x, y):
+    def __init__(self, image, x, y, car_num):
         pygame.sprite.Sprite.__init__(self)
 
         self.image = image
         self.rect = self.image.get_rect()
         self.rect.center = [x, y]
+        self.car_num = car_num # green car = car#1 and blue car = car#2
+        self.clicked = False
+        self.change_lanes = False
+        self.counter = 0
+        self.vel = 4
 
+    def update(self):
+        if self.clicked == False and self.change_lanes == False and pygame.mouse.get_pressed()[0] == 1:
+            self.clicked = True
+            self.change_lanes = True
+        if pygame.mouse.get_pressed()[0] == 0:
+            self.clicked = False
+        if self.counter >= lane_width:
+            self.change_lanes = False
+            self.counter = 0
+        
+        if self.car_num == 1:
+            self.crossing_line = 1/4 * screen_width
+        elif self.car_num == 2:
+            self.crossing_line = 3/4 * screen_width
+        
+        if self.change_lanes == False and self.rect.x <= self.crossing_line:
+            self.on_left = True
+            self.on_right = False
+        elif self.change_lanes == False and self.rect.x >= self.crossing_line:
+            self.on_left = False
+            self.on_right = True
+
+        if self.change_lanes == True:
+
+            if self.on_left:
+                self.rect.x += self.vel
+            elif self.on_right:
+                self.rect.x -= self.vel
+            self.counter += self.vel
 
 
 car_group = pygame.sprite.Group()
-green_car = Cars(green_car_img, 7/8 * screen_width, screen_height - 0.6 * car_height) # (1 - 1/8) * screen width
-blue_car = Cars(blue_car_img, 1/8 * screen_width, screen_height - 0.6 * car_height)
+green_car = Cars(green_car_img, 1/8 * screen_width, screen_height - 0.6 * car_height, 1) # (1 - 1/8) * screen width
+blue_car = Cars(blue_car_img, 7/8 * screen_width, screen_height - 0.6 * car_height, 2)
 car_group.add(green_car)
 car_group.add(blue_car)
 
@@ -58,7 +97,7 @@ while running:
 
     # draw cars and obstacles
     car_group.draw(screen)
-
+    car_group.update()
 
        
     
