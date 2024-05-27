@@ -4,6 +4,9 @@ import pygame
 from pygame.locals import *
 import random
 
+
+pygame.font.init()
+
 # game variables
 running = True
 ground_scroll = 0
@@ -17,6 +20,8 @@ distance_bn_objs = 0
 velocity = 4
 randomize = False
 score = 0
+font = pygame.font.SysFont("Bauhaus 93", 60)
+white = (255, 255, 255)
 
 # screen and functionality
 screen_width = 400
@@ -40,7 +45,9 @@ green_car_img = pygame.transform.scale(pygame.image.load("img/green_car.png"), (
 circle = pygame.transform.scale(pygame.image.load("img/circle.png"), (40, 40))
 rectangle = pygame.transform.scale(pygame.image.load("img/rectangle.png"), (40, 40))
 
-
+def draw_text(text, font, text_color, x, y):
+    msg = font.render(text, True, text_color)
+    screen.blit(msg, (x, y))
 
 def reset_game():
 
@@ -53,7 +60,6 @@ def reset_game():
     green_car.on_right = False
     blue_car.on_left = True
     blue_car.on_right = False
-
 
     score = 0
     return score
@@ -212,6 +218,11 @@ while running:
         goodies_group.update()
         obstacles_group.update()
         car_group.update()
+    
+    draw_text(str(score), font, white, screen_width//2 - 50, 20)
+    if not(driving) and not(game_over):
+        draw_text("Press any key", font, white, 20, screen_height//2 - 60)
+        draw_text("to start...", font, white, lane_width - 30, screen_height//2)
 
     if game_over:
         if restart_btn.draw():
