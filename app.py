@@ -1,4 +1,4 @@
-
+ 
 from typing import Any
 import pygame
 from pygame.locals import *
@@ -10,11 +10,13 @@ ground_scroll = 0
 scroll_speed = 4
 lane_divider = 42 # length of each short, white lane dividers
 game_over = False
+driving = False
 
 next_obj = 0
 distance_bn_objs = 0
 velocity = 4
 randomize = False
+score = 0
 
 # screen and functionality
 screen_width = 400
@@ -39,6 +41,24 @@ circle = pygame.transform.scale(pygame.image.load("img/circle.png"), (40, 40))
 rectangle = pygame.transform.scale(pygame.image.load("img/rectangle.png"), (40, 40))
 
 
+
+def reset_game():
+
+    goodies_group.empty()
+    obstacles_group.empty()
+
+    green_car.rect.center = [1/8 * screen_width, screen_height - 0.6 * car_height]
+    blue_car.rect.center = [7/8 * screen_width, screen_height - 0.6 * car_height]
+    green_car.on_left = True
+    green_car.on_right = False
+    blue_car.on_left = True
+    blue_car.on_right = False
+
+
+    score = 0
+    return score
+
+
 # car groups
 class Cars(pygame.sprite.Sprite):
     def __init__(self, image, x, y, car_num):
@@ -49,6 +69,8 @@ class Cars(pygame.sprite.Sprite):
         self.rect.center = [x, y]
         self.car_num = car_num # green car = car#1 and blue car = car#2
         self.clicked = False
+        self.on_left = True
+        self.on_right = False
         self.change_lanes = False
         self.counter = 0
         self.vel = 4
@@ -108,29 +130,29 @@ class Obstacles(pygame.sprite.Sprite):
             self.kill()
 
 
-
-
-"""
-    create circle and rects at top
-    scroll it downward
-    when obj position reaches car:
-        if obj.img == circle:
-            check for collide and kill circle
-        if obj.img == rect:
-            check for collide and game over
-
-    kill when obj ran outside the screen
+class Button():
+    def __init__(self, img, x, y):
+        self.image = pygame.image.load(img)
+        self.rect = self.image.get_rect()
+        self.rect.center = [x, y]
     
-"""
+    def draw(self):
+        screen.blit(self.image, (self.rect.x, self.rect.y))
 
+        cursor_position = pygame.mouse.get_pos()
+        if self.rect.collidepoint(cursor_position) == 1:
+            if pygame.mouse.get_pressed()[0]:
+                return True
+            
 car_group = pygame.sprite.Group()
 obstacles_group = pygame.sprite.Group()
+goodies_group = pygame.sprite.Group()
 green_car = Cars(green_car_img, 1/8 * screen_width, screen_height - 0.6 * car_height, 1) 
 blue_car = Cars(blue_car_img, 7/8 * screen_width, screen_height - 0.6 * car_height, 2) # (1 - 1/8) * screen width
 car_group.add(green_car)
 car_group.add(blue_car)
 
-
+restart_btn = Button("img/restart.png", screen_width//2, screen_height//2 - 30)
 
 #main game loop
 while running:
@@ -138,12 +160,13 @@ while running:
     
     #drawing backrounds and cars
     screen.blit(background_lane, (0, ground_scroll - lane_divider))
-    car_group.draw(screen)
-    car_group.update()
+    car_group.draw(screen)    
+    obstacles_group.draw(screen)
+    goodies_group.draw(screen)
 
+  
     
-    
-    if not(game_over):
+    if not(game_over) and driving:
         # sliding ground downwards
         ground_scroll += scroll_speed
         if ground_scroll > lane_divider:
@@ -151,37 +174,58 @@ while running:
 
         # generate obstacles
         if randomize:
-            next_obj = random.randint(250, 500)
+            next_obj = random.randint(250, 499)
             randomize = False
-        obstacle_type = [circle, rectangle]
         if distance_bn_objs >= next_obj:
             randomize = True
             distance_bn_objs = 0
             random_lane = random.randint(0, 1)
-            random_obstacle = random.randint(0, 1)
-            obstacle_left = Obstacles(obstacle_type[random_obstacle], 1/8 * screen_width + random_lane * lane_width, 0)
+            random_obj = random.randint(0, 1)
+            if random_obj == 0:
+                obstacle_left = Obstacles(rectangle, 1/8 * screen_width + random_lane * lane_width, 0)
+                obstacles_group.add(obstacle_left)
+            else:
+                goody_left = Obstacles(circle, 1/8 * screen_width + random_lane * lane_width, 0)
+                goodies_group.add(goody_left)
             
             random_lane = random.randint(2, 3)
-            random_obstacle = random.randint(0, 1)
+            random_obj = random.randint(0, 1)
             random_y = random.randint(50, 150)
-            obstacle_right = Obstacles(obstacle_type[random_obstacle], 1/8 * screen_width + random_lane * lane_width, -1 * random_y)
-            
-            obstacles_group.add(obstacle_left)
-            obstacles_group.add(obstacle_right)
-        distance_bn_objs += velocity
-        obstacles_group.draw(screen)
-        obstacles_group.update()
-    
+            if random_obj == 0:
+                obstacle_right = Obstacles(rectangle, 1/8 * screen_width + random_lane * lane_width, -1 * random_y)
+                obstacles_group.add(obstacle_right)
+            else:
+                goody_right = Obstacles(circle, 1/8 * screen_width + random_lane * lane_width, -1 * random_y)
+                goodies_group.add(goody_right)            
 
-    
-    
-    pygame.display.update()
+        distance_bn_objs += velocity
+
+        if  len(obstacles_group) > 0 or len(goodies_group) > 0:
+
+            if pygame.sprite.groupcollide(car_group, obstacles_group, False, True):
+                game_over = True
+                driving = False
+            elif pygame.sprite.groupcollide(car_group, goodies_group, False, True):
+                score += 1
+                print(score)
+
+        goodies_group.update()
+        obstacles_group.update()
+        car_group.update()
+
+    if game_over:
+        if restart_btn.draw():
+            game_over = False
+            score = reset_game()
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
-
+        
+        if not(driving) and not(game_over) and event.type == pygame.KEYDOWN:
+            driving = True
+    
+    pygame.display.update()
 
 
 pygame.quit()
