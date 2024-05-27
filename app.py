@@ -79,7 +79,6 @@ class Cars(pygame.sprite.Sprite):
         self.on_right = False
         self.change_lanes = False
         self.counter = 0
-        self.vel = 4
 
     def update(self):
         # assign keyboard keys to each car.
@@ -93,7 +92,6 @@ class Cars(pygame.sprite.Sprite):
             self.change_lanes = True
         if pygame.key.get_pressed()[self.index] == False:
             self.clicked = False
-
         
         if self.counter >= lane_width:
             self.change_lanes = False
@@ -114,10 +112,10 @@ class Cars(pygame.sprite.Sprite):
         if self.change_lanes == True:
 
             if self.on_left:
-                self.rect.x += self.vel
+                self.rect.x += velocity
             elif self.on_right:
-                self.rect.x -= self.vel
-            self.counter += self.vel
+                self.rect.x -= velocity
+            self.counter += velocity
 
 class Obstacles(pygame.sprite.Sprite):
     def __init__(self, img, x, y):
@@ -126,11 +124,10 @@ class Obstacles(pygame.sprite.Sprite):
         self.image = img
         self.rect = self.image.get_rect()
         self.rect.center = [x, y]
-        self.vel = 4
 
 
     def update(self):
-        self.rect.y += self.vel
+        self.rect.y += velocity
 
         if self.rect.top > screen_height:
             self.kill()
@@ -207,13 +204,11 @@ while running:
         distance_bn_objs += velocity
 
         if  len(obstacles_group) > 0 or len(goodies_group) > 0:
-
             if pygame.sprite.groupcollide(car_group, obstacles_group, False, True):
                 game_over = True
                 driving = False
             elif pygame.sprite.groupcollide(car_group, goodies_group, False, True):
                 score += 1
-                print(score)
 
         goodies_group.update()
         obstacles_group.update()
@@ -221,8 +216,8 @@ while running:
     
     draw_text(str(score), font, white, screen_width//2 - 50, 20)
     if not(driving) and not(game_over):
-        draw_text("Press any key", font, white, 20, screen_height//2 - 60)
-        draw_text("to start...", font, white, lane_width - 30, screen_height//2)
+        draw_text("Press any key", font, white, 20, screen_height//2 - 120)
+        draw_text("to start...", font, white, lane_width - 30, screen_height//2 - 60)
 
     if game_over:
         if restart_btn.draw():
